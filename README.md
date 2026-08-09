@@ -1,0 +1,123 @@
+# Bite Map
+
+Your food exploration operating system — an interactive map of everywhere you've eaten (and haven't), a restaurant/food journal, a photo scrapbook, and an AI food concierge, built to be explored solo or with a partner.
+
+Bite Map is deliberately **not** a generic restaurant finder. The three systems everything else orbits are:
+
+1. **Interactive Food Map** — FRIDAY-style dark map with status-colored markers and neighborhood exploration progress
+2. **Restaurant / Food Journal** — a warm, chronological record of what you ate, with whom, and what you thought
+3. **Photo Journal** — a scrapbook of food memories (full drag-and-drop editor is a tracked future phase)
+
+The core loop: **Discover → Visit → Check Off → Rate → Photograph → Journal → Remember → Discover Again.**
+
+## Design principle: works with zero keys
+
+Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 44-restaurant hand-authored Orange County / LA dataset (Irvine, Costa Mesa, Newport Beach, Little Tokyo, Koreatown, Downtown LA, Little Saigon) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
+
+## Architecture
+
+```
+/src
+  /app                    Next.js App Router routes
+    /(app)                Authenticated shell: map, discover, journal, photo-journal,
+                           collections, ai-guide, profile, restaurant/[id], updates
+    /api                  Route handlers (restaurants/nearby, ai-guide/chat, uploadthing)
+    /sign-in, /sign-up     Clerk auth routes
+  /components
+    /map                  Map canvas, theme switcher, filters
+    /restaurants           Cards, consensus badge, dish guide, quick actions
+    /journal, /photo-journal, /ai, /layout, /shared
+    /ui                    shadcn/ui primitives
+  /providers               Restaurant data source adapters — google.ts, yelp.ts,
+                            foursquare.ts, osm.ts, mock.ts — all implementing the same
+                            RestaurantProvider interface. index.ts fans out to whichever
+                            are configured and falls back to mock.
+  /services
+    yuu-ai.ts               YUU AI concierge abstraction (server-only)
+  /lib
+    consensus.ts            BiteMap Consensus Score (Bayesian shrinkage across platforms)
+    entity-resolution.ts    Merges duplicate results across providers into one restaurant
+    filters.ts, hours.ts, geo.ts, map-projection.ts, restaurant-status.ts
+    /queries                DB-or-provider-fallback data access (restaurants, journal,
+                             collections, stats)
+    /actions                Server actions (toggleWishlist, logVisit, quickCheckIn, ...)
+  /db
+    schema.ts                Full Drizzle schema (see below)
+    seed/                    Mock restaurant dataset + seed script
+  /types                    NormalizedRestaurant (provider contract) and RestaurantCard
+                             (UI contract) — the two shapes everything else builds on
+```
+
+### Provider abstraction
+
+Every restaurant data source implements `RestaurantProvider` (`src/providers/types.ts`):
+
+```ts
+interface RestaurantProvider {
+  id: ProviderId;
+  isConfigured(): boolean;
+  searchNearby(params): Promise<NormalizedRestaurant[]>;
+  getById(externalId): Promise<NormalizedRestaurant | null>;
+}
+```
+
+`searchAllProviders()` fans a nearby search out to every configured real provider (Google, Yelp, Foursquare, OSM) in parallel and falls back to the mock provider if none are configured. Results are then merged by `lib/entity-resolution.ts`, which matches records across providers by proximity + fuzzy name (no shared ID exists across Google/Yelp/Foursquare/OSM) so the same restaurant never shows up as duplicate pins.
+
+### Consensus score
+
+`lib/consensus.ts` implements the spec's Bayesian-shrinkage blend: each platform rating is normalized to a 0-100 scale, shrunk toward a neutral prior in proportion to how few reviews back it (so five 5-star reviews don't outrank three thousand 4.6-star reviews), then combined weighted by `log(1 + reviewCount)`. Confidence labels (`low`/`medium`/`high`/`very_high`) are derived from total review volume.
+
+### Database
+
+`src/db/schema.ts` is the full data model from the product spec — restaurants, restaurant_sources, restaurant_dishes, visits, ratings, visit_dishes, journal_entries, journal_pages, collections, wishlists, shared_spaces, food_dates, achievements, cuisine_progress, dish_progress, ai_conversations, preferences — even though the UI currently exercises Phases 1-5 of the build order below. This means adding the Phase 6-7 UI (photo journal canvas editor, gamification surfaces) is additive, not a schema migration.
+
+Restaurants are canonical — a Google result and a Yelp result for the same physical restaurant resolve to one `restaurants` row with multiple `restaurant_sources` rows, never duplicate restaurants.
+
+## Local setup
+
+```bash
+npm install
+cp .env.example .env.local   # fill in whichever keys you have
+npm run dev
+```
+
+The app is fully clickable at this point with mock data and a demo user.
+
+### Add a database
+
+1. Create a [Neon](https://neon.tech) Postgres database, set `DATABASE_URL` in `.env.local`.
+2. `npm run db:push` — pushes the Drizzle schema.
+3. `npm run db:seed` — seeds the full 44-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
+4. `npm run db:studio` — inspect data in Drizzle Studio.
+
+### Add real accounts
+
+Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` from a [Clerk](https://clerk.com) app. Until then, every write (visits, wishlist, etc.) uses the seeded `demo_user_you` account — see `src/lib/auth.ts`.
+
+### Add live restaurant data
+
+Any of `GOOGLE_PLACES_API_KEY`, `YELP_API_KEY`, `FOURSQUARE_API_KEY` switch the Map/Discover data source from mock to live automatically — no code change. `ENABLE_OSM_PROVIDER=true` opts into the free OpenStreetMap/Overpass provider (off by default since it's a shared community resource with strict rate limits).
+
+### YUU AI integration
+
+`src/services/yuu-ai.ts` posts the conversation plus a system prompt built from the user's preferences, recent visits, and wishlist to `${YUU_API_URL}/chat` with a Bearer token. Set `YUU_API_URL` and `YUU_API_KEY` (from your gariyuuu.com YUU deployment) to bring the AI Guide page online; until then it shows a "connect YUU" message instead of failing.
+
+## Privacy
+
+Location is entirely consent-based (spec section 3): the app never requests geolocation on load. The first time a location-dependent feature is used, `LocationConsentDialog` offers **Allow location**, **Enter location manually** (city/neighborhood picker), or **Not now** — declining still leaves the full app usable via a default location. Consent state and coordinates are stored client-side (`localStorage`) only; nothing is persisted server-side, and there is no background location tracking.
+
+## API cost protection
+
+- All provider fetches are wrapped in Next's `fetch` cache (`next: { revalidate }`) at 1-6 hour windows.
+- The nearby-search API route (`/api/restaurants/nearby`) takes an explicit radius and result limit — no unbounded queries.
+- The DB-backed path pre-filters with a lat/lng bounding box before the more expensive haversine sort, so a configured database never does a full table scan for a nearby search.
+- OSM/Overpass — a shared free resource — is off by default (`ENABLE_OSM_PROVIDER=false`) to avoid hammering public infrastructure.
+- No provider API key is ever sent to the client; all provider calls happen in server-only route handlers/queries.
+
+## Deployment
+
+Deploys to Vercel like any Next.js app: `vercel --prod`, with the env vars from `.env.example` set in the project settings. Run `npm run db:push && npm run db:seed` once against the production database if you want the demo data live.
+
+## Build order / what's implemented
+
+Phases 1-5 of the product spec's implementation order are built: auth, map, discovery, restaurant profiles, visited/wishlist/favorite, consensus scoring, dish guides, search/filtering, food journal, photo-journal scrapbook view, collections, and the YUU concierge abstraction. Phases 6-7 (drag-and-drop photo journal canvas editor, flipbook/slide exports, full gamification/achievements UI, Year in Food) have their database models in place (`journal_pages.elements`, `achievements`, `cuisine_progress`, `dish_progress`) but no UI yet — see `/updates` for patch notes as those land.
