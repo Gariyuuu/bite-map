@@ -1,27 +1,15 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getCurrentUserId } from "@/lib/auth";
 import { getJournalEntries } from "@/lib/queries/journal";
+import { getJournalPages } from "@/lib/queries/journal-pages";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DATABASE_ENABLED } from "@/db";
-
-const TEMPLATES = [
-  "Date Night",
-  "Food Crawl",
-  "Weekend Eats",
-  "Ramen Tour",
-  "Café Tour",
-  "Dessert Day",
-  "Birthday Dinner",
-  "Michelin Night",
-  "Asian Food Tour",
-  "Month in Food",
-  "Year in Food",
-];
+import { TemplateGallery } from "@/components/photo-journal/template-gallery";
 
 export default async function PhotoJournalPage() {
   const userId = await getCurrentUserId();
-  const entries = await getJournalEntries(userId);
+  const [entries, boards] = await Promise.all([getJournalEntries(userId), getJournalPages(userId)]);
   const withPhotos = entries.filter((e) => e.restaurant?.heroPhotoUrl);
 
   return (
@@ -32,22 +20,30 @@ export default async function PhotoJournalPage() {
       </div>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground">Start a board</h2>
-          <Badge variant="outline">Drag-and-drop editor — Phase 6</Badge>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TEMPLATES.map((t) => (
-            <Card
-              key={t}
-              className="flex h-28 w-40 shrink-0 cursor-not-allowed select-none flex-col items-center justify-center gap-1 border-dashed p-3 text-center opacity-70"
-            >
-              <span className="text-sm font-medium">{t}</span>
-              <span className="text-[11px] text-muted-foreground">Coming soon</span>
-            </Card>
-          ))}
-        </div>
+        <h2 className="text-sm font-semibold text-muted-foreground">Start a board</h2>
+        <TemplateGallery />
       </section>
+
+      {boards.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">Your boards</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {boards.map((b) => (
+              <Link key={b.id} href={`/photo-journal/${b.id}`}>
+                <Card className="overflow-hidden py-0 gap-0 transition-shadow hover:shadow-md">
+                  <div className="relative h-24 w-full bg-muted">
+                    {b.coverPhotoUrl && <Image src={b.coverPhotoUrl} alt={b.title ?? "Board"} fill className="object-cover" />}
+                  </div>
+                  <div className="p-2">
+                    <p className="truncate text-xs font-medium">{b.title ?? "Untitled board"}</p>
+                    <p className="text-[11px] text-muted-foreground">{b.template}</p>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">Memory Map</h2>

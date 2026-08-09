@@ -6,7 +6,7 @@ Bite Map is deliberately **not** a generic restaurant finder. The three systems 
 
 1. **Interactive Food Map** — FRIDAY-style dark map with status-colored markers and neighborhood exploration progress
 2. **Restaurant / Food Journal** — a warm, chronological record of what you ate, with whom, and what you thought
-3. **Photo Journal** — a scrapbook of food memories (full drag-and-drop editor is a tracked future phase)
+3. **Photo Journal** — a drag-and-drop scrapbook board (photos, restaurant cards, captions, date stamps) built from your real visit history
 
 The core loop: **Discover → Visit → Check Off → Rate → Photograph → Journal → Remember → Discover Again.**
 
@@ -124,4 +124,4 @@ Deploys to Vercel like any Next.js app: `vercel --prod`, with the env vars from 
 
 ## Build order / what's implemented
 
-Phases 1-5 of the product spec's implementation order are built: auth, map, discovery, restaurant profiles, visited/wishlist/favorite, consensus scoring, dish guides, search/filtering, food journal, photo-journal scrapbook view, collections, and the YUU concierge abstraction. Phases 6-7 (drag-and-drop photo journal canvas editor, flipbook/slide exports, full gamification/achievements UI, Year in Food) have their database models in place (`journal_pages.elements`, `achievements`, `cuisine_progress`, `dish_progress`) but no UI yet — see `/updates` for patch notes as those land.
+Phases 1-7 of the product spec's implementation order are built: auth, map, discovery, restaurant profiles, visited/wishlist/favorite, consensus scoring, dish guides, search/filtering, food journal, a real drag-and-drop photo journal board editor (`src/components/photo-journal`, positions stored as percentages so boards stay responsive), collections, the YUU concierge abstraction, and gamification achievements (`src/lib/achievements.ts`, synced after every visit-logging action). Not yet built: flipbook/slide-deck exports and Year in Food — `journal_pages.elements` already holds everything a flipbook export would read from, so that's additive when it lands. See `/updates` for patch notes as those land.
