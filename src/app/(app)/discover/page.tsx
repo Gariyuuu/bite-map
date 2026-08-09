@@ -9,6 +9,7 @@ import { useNearbyRestaurants } from "@/hooks/use-nearby-restaurants";
 import { FilterBar } from "@/components/map/filter-bar";
 import { SectionRow } from "@/components/restaurants/section-row";
 import { RestaurantCard } from "@/components/restaurants/restaurant-card";
+import { RestaurantCardSkeletonGrid } from "@/components/restaurants/restaurant-card-skeleton";
 import { applyFilters, type FilterId } from "@/lib/filters";
 
 const TAG_ONLY_CUISINES = new Set(["Date Night", "Fine Dining", "Cheap Eats", "Michelin"]);
@@ -91,29 +92,36 @@ export default function DiscoverPage() {
         onToggleCuisine={toggleCuisine}
       />
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading restaurants...</p>}
-
-      {!isLoading && !hasActiveFilters && !search && (
-        <div className="space-y-6">
-          <SectionRow title="🔥 Trending Near You" restaurants={trending} />
-          <SectionRow title="You Haven't Tried This" restaurants={havenTried} />
-          <SectionRow title="Highly Rated" restaurants={highlyRated} />
+      {isLoading ? (
+        <div className="space-y-2">
+          <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+          <RestaurantCardSkeletonGrid />
         </div>
+      ) : (
+        <>
+          {!hasActiveFilters && !search && (
+            <div className="space-y-6">
+              <SectionRow title="🔥 Trending Near You" restaurants={trending} />
+              <SectionRow title="You Haven't Tried This" restaurants={havenTried} />
+              <SectionRow title="Highly Rated" restaurants={highlyRated} />
+            </div>
+          )}
+
+          <section className="space-y-2">
+            <h2 className="px-1 text-sm font-semibold text-muted-foreground">
+              {hasActiveFilters || search ? "Results" : "All Nearby"}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filtered.map((r) => (
+                <RestaurantCard key={r.id} restaurant={r} />
+              ))}
+            </div>
+            {filtered.length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">No restaurants match these filters yet.</p>
+            )}
+          </section>
+        </>
       )}
-
-      <section className="space-y-2">
-        <h2 className="px-1 text-sm font-semibold text-muted-foreground">
-          {hasActiveFilters || search ? "Results" : "All Nearby"}
-        </h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((r) => (
-            <RestaurantCard key={r.id} restaurant={r} />
-          ))}
-        </div>
-        {!isLoading && filtered.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">No restaurants match these filters yet.</p>
-        )}
-      </section>
     </div>
   );
 }

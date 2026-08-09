@@ -15,7 +15,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
   const StatusIcon = statusMeta.icon;
 
   return (
-    <Card className="group overflow-hidden py-0 gap-0">
+    <Card className="group overflow-hidden py-0 gap-0 transition-shadow duration-300 hover:shadow-lg">
       <Link href={`/restaurant/${encodeURIComponent(restaurant.id)}`} className="block">
         <div className="relative h-40 w-full overflow-hidden bg-muted">
           {restaurant.heroPhotoUrl ? (

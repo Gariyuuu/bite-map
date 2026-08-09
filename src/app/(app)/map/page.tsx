@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence } from "framer-motion";
-import { Navigation, LocateFixed } from "lucide-react";
+import { Navigation, LocateFixed, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -131,8 +131,11 @@ export default function MapPage() {
 
       <div className="relative min-h-0 flex-1">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-background/40 text-sm text-muted-foreground backdrop-blur-sm">
-            Loading the map...
+          <div className="pointer-events-none absolute inset-0 z-[600] flex items-start justify-center pt-6">
+            <div className="flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs text-muted-foreground shadow-md backdrop-blur-sm">
+              <Loader2 className="size-3.5 animate-spin" />
+              Finding restaurants nearby...
+            </div>
           </div>
         )}
         <MapCanvas
