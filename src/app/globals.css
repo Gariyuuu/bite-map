@@ -196,6 +196,26 @@
   @apply backdrop-blur-xl bg-white/70 dark:bg-black/40 border border-white/20 dark:border-white/10;
 }
 
+/* Leaflet map (src/components/map/map-canvas.tsx) */
+.leaflet-container {
+  font: inherit;
+  border-radius: inherit;
+  z-index: 0;
+}
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+.bitemap-friday-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 450;
+  background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12), transparent 60%);
+  mix-blend-mode: screen;
+}
+
 .text-balance {
   text-wrap: balance;
 }

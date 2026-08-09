@@ -5,13 +5,20 @@ export type MarkerStatusId = "favorite" | "visited" | "wishlist" | "trending" | 
 
 export const MARKER_STATUS_META: Record<
   MarkerStatusId,
-  { label: string; icon: typeof Check; className: string; dot: string }
+  { label: string; icon: typeof Check; className: string; dot: string; glyph: string; hex: string }
 > = {
-  favorite: { label: "Favorite", icon: Star, className: "text-amber-500", dot: "bg-amber-500" },
-  visited: { label: "Visited", icon: Check, className: "text-emerald-500", dot: "bg-emerald-500" },
-  wishlist: { label: "Wishlist", icon: Heart, className: "text-rose-500", dot: "bg-rose-500" },
-  trending: { label: "Trending", icon: Flame, className: "text-orange-500", dot: "bg-orange-500" },
-  unvisited: { label: "Not visited", icon: Circle, className: "text-muted-foreground", dot: "bg-muted-foreground/50" },
+  favorite: { label: "Favorite", icon: Star, className: "text-amber-500", dot: "bg-amber-500", glyph: "★", hex: "#f59e0b" },
+  visited: { label: "Visited", icon: Check, className: "text-emerald-500", dot: "bg-emerald-500", glyph: "✓", hex: "#10b981" },
+  wishlist: { label: "Wishlist", icon: Heart, className: "text-rose-500", dot: "bg-rose-500", glyph: "♥", hex: "#f43f5e" },
+  trending: { label: "Trending", icon: Flame, className: "text-orange-500", dot: "bg-orange-500", glyph: "🔥", hex: "#f97316" },
+  unvisited: {
+    label: "Not visited",
+    icon: Circle,
+    className: "text-muted-foreground",
+    dot: "bg-muted-foreground/50",
+    glyph: "○",
+    hex: "#6b7280",
+  },
 };
 
 /** Marker/status priority so a favorite always reads as a favorite even if also trending. */

@@ -6,5 +6,4 @@
  * here; only presence checks that are safe to read from client components.
  */
 export const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-export const MAPBOX_ENABLED = Boolean(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 export const UPLOADTHING_ENABLED = Boolean(process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID);

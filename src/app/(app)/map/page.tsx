@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence } from "framer-motion";
 import { Navigation, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useLocation } from "@/components/shared/location-provider";
 import { useNearbyRestaurants } from "@/hooks/use-nearby-restaurants";
-import { MapCanvas } from "@/components/map/map-canvas";
 import { MapThemeSwitcher } from "@/components/map/theme-switcher";
 import { FilterBar } from "@/components/map/filter-bar";
 import { SelectedRestaurantCard } from "@/components/map/selected-restaurant-card";
@@ -19,9 +19,20 @@ import type { RestaurantCard } from "@/types/ui";
 
 const TAG_ONLY_CUISINES = new Set(["Date Night", "Fine Dining", "Cheap Eats", "Michelin"]);
 
+// Leaflet touches `window` at import time, so it can never be part of the
+// server-rendered bundle — load it only in the browser.
+const MapCanvas = dynamic(() => import("@/components/map/map-canvas").then((m) => m.MapCanvas), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center rounded-3xl border border-border/60 bg-muted text-sm text-muted-foreground">
+      Loading map...
+    </div>
+  ),
+});
+
 export default function MapPage() {
   const location = useLocation();
-  const [theme, setTheme] = useState<MapThemeId>("friday");
+  const [theme, setTheme] = useState<MapThemeId>("standard");
   const [radiusMiles, setRadiusMiles] = useState(8);
   const [selected, setSelected] = useState<RestaurantCard | null>(null);
   const [exploreProgress, setExploreProgress] = useState(false);

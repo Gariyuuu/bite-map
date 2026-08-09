@@ -4,7 +4,7 @@ Your food exploration operating system — an interactive map of everywhere you'
 
 Bite Map is deliberately **not** a generic restaurant finder. The three systems everything else orbits are:
 
-1. **Interactive Food Map** — FRIDAY-style dark map with status-colored markers and neighborhood exploration progress
+1. **Interactive Food Map** — a real navigable map (Leaflet + free OpenStreetMap/CartoDB/Esri tiles, no API key) with status-colored markers, 5 themes, and neighborhood exploration progress
 2. **Restaurant / Food Journal** — a warm, chronological record of what you ate, with whom, and what you thought
 3. **Photo Journal** — a drag-and-drop scrapbook board (photos, restaurant cards, captions, date stamps) built from your real visit history
 
