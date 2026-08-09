@@ -78,12 +78,12 @@ export default async function DashboardPage() {
             </div>
           </Card>
         </Link>
-        <Link href="/collections">
+        <Link href="/shared">
           <Card className="flex h-full flex-col justify-between gap-2 p-4 transition-shadow hover:shadow-md">
             <Heart className="size-5 text-accent" />
             <div>
-              <p className="font-medium">Shared Wishlist</p>
-              <p className="text-xs text-muted-foreground">Restaurants you and your partner want to try.</p>
+              <p className="font-medium">Our Food Map</p>
+              <p className="text-xs text-muted-foreground">Shared wishlist and stats with your partner.</p>
             </div>
           </Card>
         </Link>

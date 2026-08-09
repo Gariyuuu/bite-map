@@ -126,8 +126,8 @@ export default async function ProfilePage() {
           <p className="font-medium">Shared Journey</p>
           <p className="text-xs text-muted-foreground">See restaurants you and your partner have explored together.</p>
         </div>
-        <Link href="/map" className="text-sm font-medium text-accent underline">
-          Open map
+        <Link href="/shared" className="text-sm font-medium text-accent underline">
+          Open
         </Link>
       </Card>
     </div>
