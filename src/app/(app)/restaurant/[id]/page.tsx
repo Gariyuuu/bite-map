@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Phone, Globe, MapPin } from "lucide-react";
+import { Phone, Globe, MapPin, ExternalLink } from "lucide-react";
 import { getRestaurantById } from "@/lib/queries/restaurants";
 import { getCurrentUserId } from "@/lib/auth";
 import { getOpenStatus } from "@/lib/hours";
+import { googleMapsSearchUrl } from "@/lib/external-map-link";
 import { QuickActions } from "@/components/restaurants/quick-actions";
 import { SourceBreakdown } from "@/components/restaurants/source-breakdown";
 import { DishGuide } from "@/components/restaurants/dish-guide";
@@ -31,13 +32,29 @@ export default async function RestaurantProfilePage({ params }: { params: Promis
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <div className="absolute inset-x-4 bottom-4 text-white">
-          <h1 className="text-2xl font-bold sm:text-3xl">{restaurant.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold sm:text-3xl">{restaurant.name}</h1>
+            {restaurant.isFabricated && (
+              <Badge variant="outline" className="border-white/40 text-white">
+                Demo listing
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-white/85">
             {restaurant.cuisines.join(" • ")}
             {restaurant.priceLevel ? ` • ${restaurant.priceLevel}` : ""}
           </p>
         </div>
       </div>
+
+      {restaurant.isFabricated && (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          This is a procedurally-generated demo listing — the name, address, and ratings are fabricated for the
+          purpose of populating the map. It won&apos;t show up on Google Maps. Restaurants without the &quot;Demo
+          listing&quot; badge are real places (their ratings are still placeholder demo numbers until a live
+          provider key is configured).
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -59,6 +76,14 @@ export default async function RestaurantProfilePage({ params }: { params: Promis
               <Globe className="size-3.5" /> Website
             </a>
           )}
+          <a
+            href={googleMapsSearchUrl(restaurant.name, restaurant.address)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1 hover:underline"
+          >
+            <ExternalLink className="size-3.5" /> View on Google Maps
+          </a>
         </div>
         <div className="flex items-center gap-2">
           <QuickActions

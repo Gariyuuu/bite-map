@@ -84,7 +84,7 @@ function photos(seed: string, count = 3) {
   return Array.from({ length: count }, (_, i) => `bitemap-${seed}-${i}`);
 }
 
-const handCraftedRestaurants: MockRestaurantSeed[] = [
+export const handCraftedRestaurants: MockRestaurantSeed[] = [
   // ---------------------------------------------------------------- Irvine
   {
     id: "din-tai-fung-irvine",

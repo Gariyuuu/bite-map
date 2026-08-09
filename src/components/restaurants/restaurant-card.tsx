@@ -46,7 +46,14 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
       <div className="flex flex-col gap-2 p-3">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/restaurant/${encodeURIComponent(restaurant.id)}`} className="min-w-0">
-            <h3 className="truncate font-semibold leading-tight">{restaurant.name}</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="truncate font-semibold leading-tight">{restaurant.name}</h3>
+              {restaurant.isFabricated && (
+                <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+                  Demo
+                </Badge>
+              )}
+            </div>
             <p className="truncate text-xs text-muted-foreground">
               {restaurant.cuisines.slice(0, 2).join(" • ")}
               {restaurant.priceLevel ? ` • ${restaurant.priceLevel}` : ""}

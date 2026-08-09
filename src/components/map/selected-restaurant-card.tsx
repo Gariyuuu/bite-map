@@ -5,6 +5,7 @@ import Image from "next/image";
 import { X, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ConsensusBadge } from "@/components/restaurants/consensus-badge";
 import { QuickActions } from "@/components/restaurants/quick-actions";
 import { getOpenStatus } from "@/lib/hours";
@@ -29,7 +30,14 @@ export function SelectedRestaurantCard({ restaurant, onClose }: { restaurant: Re
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/restaurant/${encodeURIComponent(restaurant.id)}`} className="min-w-0">
-            <h3 className="truncate font-semibold leading-tight">{restaurant.name}</h3>
+            <span className="flex items-center gap-1.5">
+              <h3 className="truncate font-semibold leading-tight">{restaurant.name}</h3>
+              {restaurant.isFabricated && (
+                <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+                  Demo
+                </Badge>
+              )}
+            </span>
           </Link>
           <Button variant="ghost" size="icon" className="size-6 shrink-0" onClick={onClose}>
             <X className="size-3.5" />

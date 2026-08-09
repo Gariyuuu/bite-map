@@ -6,6 +6,9 @@ import { haversineMiles } from "@/lib/geo";
 import { computeConsensus } from "@/lib/consensus";
 import { EMPTY_STATUS, type RestaurantCard, type RestaurantStatusFlags } from "@/types/ui";
 import type { PriceLevel } from "@/types/restaurant";
+import { handCraftedRestaurants } from "@/db/seed/data";
+
+const HAND_CRAFTED_IDS = new Set(handCraftedRestaurants.map((r) => r.id));
 
 interface NearbyOptions {
   latitude: number;
@@ -103,6 +106,7 @@ export async function getNearbyRestaurants(opts: NearbyOptions): Promise<Restaur
         trendingScore: r.trendingScore ?? undefined,
         distanceMiles,
         source: "db",
+        isFabricated: r.isFabricated,
       }));
 
     if (query) {
@@ -162,6 +166,7 @@ export async function getNearbyRestaurants(opts: NearbyOptions): Promise<Restaur
           popularityScore: undefined,
           distanceMiles,
           source: primary.provider === "mock" ? "mock" : "live",
+          isFabricated: primary.provider === "mock" ? !HAND_CRAFTED_IDS.has(primary.externalId) : false,
         };
         return card;
       })
@@ -215,6 +220,7 @@ export async function getRestaurantById(id: string, userId?: string): Promise<Re
         ratingCount: s.ratingCount ?? 0,
       })),
       source: "db",
+      isFabricated: row.isFabricated,
     };
 
     const [withStatus] = await attachStatuses([card], userId);
@@ -255,5 +261,6 @@ export async function getRestaurantById(id: string, userId?: string): Promise<Re
         : [],
     status: EMPTY_STATUS,
     source: result.provider === "mock" ? "mock" : "live",
+    isFabricated: result.provider === "mock" ? !HAND_CRAFTED_IDS.has(externalId) : false,
   };
 }

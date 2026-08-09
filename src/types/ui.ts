@@ -37,6 +37,8 @@ export interface RestaurantCard {
   status?: RestaurantStatusFlags;
   sources?: SourceRating[];
   source: "db" | "mock" | "live";
+  /** True for procedurally-generated demo restaurants (fabricated name/address) — see db/seed/generated.ts. */
+  isFabricated?: boolean;
 }
 
 export interface RestaurantStatusFlags {

@@ -4,7 +4,7 @@
  * Run with: npm run db:seed  (requires DATABASE_URL + `npm run db:push` first)
  */
 import { getDb } from "@/db";
-import { eq } from "drizzle-orm";
+import { eq, notInArray } from "drizzle-orm";
 import {
   restaurants,
   restaurantSources,
@@ -24,7 +24,7 @@ import {
   wishlists,
   cuisineProgress,
 } from "@/db/schema";
-import { mockRestaurants, photoUrl } from "./data";
+import { mockRestaurants, handCraftedRestaurants, photoUrl } from "./data";
 import { computeConsensus } from "@/lib/consensus";
 import { id } from "@/lib/id";
 import { syncAchievements } from "@/lib/achievements";
@@ -36,11 +36,13 @@ async function main() {
   const db = getDb();
   console.log(`Seeding ${mockRestaurants.length} restaurants...`);
 
+  const handCraftedIds = new Set(handCraftedRestaurants.map((r) => r.id));
   const restaurantIds: string[] = [];
 
   for (const seed of mockRestaurants) {
     const restaurantId = `rst_${seed.id}`;
     restaurantIds.push(restaurantId);
+    const isFabricated = !handCraftedIds.has(seed.id);
 
     const consensus = computeConsensus(
       seed.sources.map((s) => ({
@@ -69,12 +71,13 @@ async function main() {
         openingHours: seed.openingHours,
         heroPhotoUrl: photoUrl(seed.photoSeeds[0]),
         signatureDishes: seed.dishes.map((d) => d.name),
+        isFabricated,
         consensusScore: consensus?.score,
         consensusConfidence: consensus?.confidence,
         popularityScore: seed.popularityScore,
         trendingScore: Math.max(0, Math.min(100, seed.popularityScore - 15 + Math.random() * 30)),
       })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({ target: restaurants.id, set: { isFabricated } });
 
     for (const source of seed.sources) {
       await db
@@ -108,6 +111,16 @@ async function main() {
         whyOrder: dish.whyOrder,
       });
     }
+  }
+
+  // The mock dataset (particularly the generated set) has changed shape a
+  // few times during development — without this, restaurants from an older
+  // version of the generator just accumulate as orphaned rows instead of
+  // being replaced, since onConflictDoUpdate only touches ids that still
+  // exist in the current mockRestaurants array.
+  const removedStale = await db.delete(restaurants).where(notInArray(restaurants.id, restaurantIds)).returning({ id: restaurants.id });
+  if (removedStale.length > 0) {
+    console.log(`Removed ${removedStale.length} stale restaurant(s) no longer in the mock dataset.`);
   }
 
   console.log("Seeding demo users...");

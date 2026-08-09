@@ -124,6 +124,16 @@ export const restaurants = pgTable(
     heroPhotoUrl: text("hero_photo_url"),
     signatureDishes: jsonb("signature_dishes").$type<string[]>().default([]),
 
+    /**
+     * True for the ~296 procedurally-generated demo restaurants (fabricated
+     * names/addresses, see db/seed/generated.ts) — false for the 52
+     * hand-authored ones, which are real restaurants (their ratings/review
+     * counts are still fabricated demo numbers, but the place itself exists).
+     * Surfaced as a "Demo listing" badge so it's not left to the user to
+     * discover by checking Google Maps and finding nothing.
+     */
+    isFabricated: boolean("is_fabricated").default(true).notNull(),
+
     // Cached aggregate fields (recomputed by /lib/consensus.ts, /lib/trending.ts)
     consensusScore: real("consensus_score"),
     consensusConfidence: text("consensus_confidence"), // low | medium | high | very_high
