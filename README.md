@@ -12,7 +12,7 @@ The core loop: **Discover → Visit → Check Off → Rate → Photograph → Jo
 
 ## Design principle: works with zero keys
 
-Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 312-restaurant Orange County / LA dataset (52 hand-authored + ~260 procedurally generated across 20+ more neighborhoods — see src/db/seed/generated.ts) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
+Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 348-restaurant Orange County / LA dataset (52 hand-authored + ~260 procedurally generated across 20+ more neighborhoods — see src/db/seed/generated.ts) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
 
 ## Architecture
 
@@ -89,7 +89,7 @@ Fastest path, if the project is linked to Vercel (`vercel link`): `vercel instal
 
 1. Create a [Neon](https://neon.tech) Postgres database, set `DATABASE_URL` in `.env.local`.
 2. `npm run db:push` — pushes the Drizzle schema.
-3. `npm run db:seed` — seeds the full 312-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
+3. `npm run db:seed` — seeds the full 348-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
 4. `npm run db:studio` — inspect data in Drizzle Studio.
 
 ### Add real accounts

@@ -97,7 +97,10 @@ const NEIGHBORHOODS: NeighborhoodSeed[] = [
   { neighborhood: "Diamond Jamboree", city: "Irvine", zip: "92618", latitude: 33.684, longitude: -117.808 },
   { neighborhood: "Great Park", city: "Irvine", zip: "92618", latitude: 33.68, longitude: -117.75 },
   { neighborhood: "Culver Plaza", city: "Irvine", zip: "92604", latitude: 33.671, longitude: -117.809 },
-  { neighborhood: "University Park", city: "Irvine", zip: "92612", latitude: 33.65, longitude: -117.71 },
+  { neighborhood: "University Town Center", city: "Irvine", zip: "92612", latitude: 33.6455, longitude: -117.8395 },
+  { neighborhood: "Turtle Rock", city: "Irvine", zip: "92603", latitude: 33.6428, longitude: -117.7975 },
+  { neighborhood: "Shady Canyon", city: "Irvine", zip: "92603", latitude: 33.6545, longitude: -117.8125 },
+  { neighborhood: "University Park", city: "Irvine", zip: "92603", latitude: 33.6488, longitude: -117.8244 },
   { neighborhood: "Woodbridge", city: "Irvine", zip: "92604", latitude: 33.6864, longitude: -117.7975 },
   { neighborhood: "South Coast Metro", city: "Costa Mesa", zip: "92626", latitude: 33.69, longitude: -117.886 },
   { neighborhood: "17th Street", city: "Costa Mesa", zip: "92627", latitude: 33.663, longitude: -117.914 },
@@ -447,23 +450,25 @@ function makeDishes(group: CuisineGroup): MockDish[] {
   }));
 }
 
-function generate(count: number): MockRestaurantSeed[] {
+function generate(
+  count: number,
+  pool: NeighborhoodSeed[],
+  seen: { ids: Set<string>; names: Set<string> }
+): MockRestaurantSeed[] {
   const results: MockRestaurantSeed[] = [];
-  const usedIds = new Set<string>();
-  const usedNames = new Set<string>();
 
   let attempts = 0;
-  while (results.length < count && attempts < count * 6) {
+  while (results.length < count && attempts < count * 8) {
     attempts++;
     const group = pick(GROUPS);
-    const area = pick(NEIGHBORHOODS);
+    const area = pick(pool);
     const name = `${pick(group.nameWords)} ${pick(group.nounWords)}`;
-    if (usedNames.has(`${name}|${area.neighborhood}`)) continue;
-    usedNames.add(`${name}|${area.neighborhood}`);
+    if (seen.names.has(`${name}|${area.neighborhood}`)) continue;
+    seen.names.add(`${name}|${area.neighborhood}`);
 
     let id = slugify(`${name}-${area.city}`);
-    if (usedIds.has(id)) id = `${id}-${results.length}`;
-    usedIds.add(id);
+    if (seen.ids.has(id)) id = `${id}-${seen.ids.size}`;
+    seen.ids.add(id);
 
     const latJitter = (rng() - 0.5) * 0.024;
     const lngJitter = (rng() - 0.5) * 0.024;
@@ -491,4 +496,17 @@ function generate(count: number): MockRestaurantSeed[] {
   return results;
 }
 
-export const generatedRestaurants: MockRestaurantSeed[] = generate(260);
+// 92603 (Turtle Rock / Shady Canyon / UCI-adjacent University area) had no
+// dedicated coverage at all — the neighborhood meant to cover it was
+// mistakenly placed ~7 miles east near Portola Springs. Fixed above and
+// given a deliberate dense cluster here rather than leaving it to random
+// chance across all 47 neighborhoods.
+const NEAR_UCI = NEIGHBORHOODS.filter((n) =>
+  ["University Town Center", "Turtle Rock", "Shady Canyon", "University Park"].includes(n.neighborhood)
+);
+
+const seen = { ids: new Set<string>(), names: new Set<string>() };
+export const generatedRestaurants: MockRestaurantSeed[] = [
+  ...generate(260, NEIGHBORHOODS, seen),
+  ...generate(36, NEAR_UCI, seen),
+];

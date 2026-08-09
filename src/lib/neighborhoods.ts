@@ -1,5 +1,7 @@
 /** Manual-location presets for onboarding + "enter location manually" (section 3). */
 export const LOCATION_PRESETS = [
+  { label: "Turtle Rock, Irvine", latitude: 33.6428, longitude: -117.7975 },
+  { label: "University Town Center, Irvine", latitude: 33.6455, longitude: -117.8395 },
   { label: "Irvine Spectrum, Irvine", latitude: 33.6595, longitude: -117.7455 },
   { label: "Diamond Jamboree, Irvine", latitude: 33.6839, longitude: -117.8078 },
   { label: "South Coast Metro, Costa Mesa", latitude: 33.6906, longitude: -117.8862 },
