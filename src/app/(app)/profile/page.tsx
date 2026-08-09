@@ -111,6 +111,16 @@ export default async function ProfilePage() {
         </div>
       </section>
 
+      <Card className="flex items-center justify-between bg-gradient-to-br from-rose-500 to-orange-400 p-4 text-white">
+        <div>
+          <p className="font-medium">🍽️ Year in Food {new Date().getFullYear()}</p>
+          <p className="text-xs text-white/80">A Spotify-Wrapped-style look back at your year of eating.</p>
+        </div>
+        <Link href="/year-in-food" className="text-sm font-medium underline">
+          View
+        </Link>
+      </Card>
+
       <Card className="flex items-center justify-between p-4">
         <div>
           <p className="font-medium">Shared Journey</p>
