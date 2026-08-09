@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getCurrentUserId, getCurrentUserProfile } from "@/lib/auth";
 import { getProfileStats } from "@/lib/queries/stats";
+import { getAchievementStatus } from "@/lib/achievements";
 import { db, DATABASE_ENABLED, cuisineProgress } from "@/db";
 import { eq } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const STAT_LABELS = [
   ["restaurantsVisited", "Restaurants Visited"],
@@ -16,8 +18,13 @@ const STAT_LABELS = [
 
 export default async function ProfilePage() {
   const userId = await getCurrentUserId();
-  const [profile, stats] = await Promise.all([getCurrentUserProfile(), getProfileStats(userId)]);
+  const [profile, stats, achievementStatus] = await Promise.all([
+    getCurrentUserProfile(),
+    getProfileStats(userId),
+    getAchievementStatus(userId),
+  ]);
   const cuisines = DATABASE_ENABLED ? await db!.select().from(cuisineProgress).where(eq(cuisineProgress.userId, userId)) : [];
+  const unlockedCount = achievementStatus.filter((a) => a.unlockedAt).length;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4">
@@ -80,6 +87,27 @@ export default async function ProfilePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground">Achievements</h2>
+          <span className="text-xs text-muted-foreground">
+            {unlockedCount}/{achievementStatus.length} unlocked
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {achievementStatus.map((a) => (
+            <Card
+              key={a.key}
+              className={cn("flex flex-col items-center gap-1 p-3 text-center", !a.unlockedAt && "opacity-40 grayscale")}
+              title={a.description}
+            >
+              <span className="text-2xl">{a.emoji}</span>
+              <p className="text-xs font-medium leading-tight">{a.label}</p>
+            </Card>
+          ))}
         </div>
       </section>
 

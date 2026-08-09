@@ -26,6 +26,7 @@ import {
 import { mockRestaurants, photoUrl } from "./data";
 import { computeConsensus } from "@/lib/consensus";
 import { id } from "@/lib/id";
+import { syncAchievements } from "@/lib/achievements";
 
 const DEMO_USER_ID = "demo_user_you";
 const DEMO_PARTNER_ID = "demo_user_partner";
@@ -289,6 +290,10 @@ async function main() {
       .values({ collectionId: dateNightCollection, restaurantId: rid })
       .onConflictDoNothing();
   }
+
+  console.log("Syncing achievements...");
+  await syncAchievements(DEMO_USER_ID);
+  await syncAchievements(DEMO_PARTNER_ID);
 
   console.log("Done. Demo users: demo_user_you, demo_user_partner (shared space: Our Food Map).");
 }

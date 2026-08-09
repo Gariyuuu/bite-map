@@ -1,9 +1,10 @@
 "use server";
 
-import { getDb, DATABASE_ENABLED, users, profiles, preferences, restaurantUserStatus, visits, ratings, visitDishes, journalEntries, cuisineProgress } from "@/db";
-import { sql } from "drizzle-orm";
+import { getDb, DATABASE_ENABLED, users, profiles, preferences, restaurantUserStatus, visits, ratings, visitDishes, journalEntries, cuisineProgress, restaurants } from "@/db";
+import { sql, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/auth";
 import { id } from "@/lib/id";
+import { syncAchievements } from "@/lib/achievements";
 import { revalidatePath } from "next/cache";
 
 /** Lazily creates the local user row on first write — no Clerk webhook required. */
@@ -92,6 +93,8 @@ export async function quickCheckIn({ restaurantId, restaurantName, cuisines }: Q
         set: { visitedCount: sql`${cuisineProgress.visitedCount} + 1` },
       });
   }
+
+  await syncAchievements(userId);
 
   revalidatePath("/map");
   revalidatePath("/discover");
@@ -184,6 +187,19 @@ export async function logVisit(input: LogVisitInput) {
         wouldReturn: input.wouldReturn,
       },
     });
+
+  const [restaurant] = await db.select({ cuisines: restaurants.cuisines }).from(restaurants).where(eq(restaurants.id, input.restaurantId));
+  for (const cuisine of restaurant?.cuisines ?? []) {
+    await db
+      .insert(cuisineProgress)
+      .values({ userId, cuisine, visitedCount: 1, recommendedTotal: 20 })
+      .onConflictDoUpdate({
+        target: [cuisineProgress.userId, cuisineProgress.cuisine],
+        set: { visitedCount: sql`${cuisineProgress.visitedCount} + 1` },
+      });
+  }
+
+  await syncAchievements(userId);
 
   revalidatePath("/map");
   revalidatePath("/discover");
