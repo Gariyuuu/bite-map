@@ -1,4 +1,5 @@
 import type { DishPriority, PriceLevel } from "@/types/restaurant";
+import { generatedRestaurants } from "./generated";
 
 /**
  * Hand-authored demo dataset covering Irvine, Costa Mesa, Newport Beach,
@@ -83,7 +84,7 @@ function photos(seed: string, count = 3) {
   return Array.from({ length: count }, (_, i) => `bitemap-${seed}-${i}`);
 }
 
-export const mockRestaurants: MockRestaurantSeed[] = [
+const handCraftedRestaurants: MockRestaurantSeed[] = [
   // ---------------------------------------------------------------- Irvine
   {
     id: "din-tai-fung-irvine",
@@ -1734,6 +1735,14 @@ export const mockRestaurants: MockRestaurantSeed[] = [
     popularityScore: 92,
   },
 ];
+
+/**
+ * Full mock dataset: the 52 hand-authored restaurants above (real dish
+ * guides, curated "why order" copy) plus ~260 procedurally-generated ones
+ * (see generated.ts) so the map/discover feel populated at real density
+ * across many more OC/LA neighborhoods.
+ */
+export const mockRestaurants: MockRestaurantSeed[] = [...handCraftedRestaurants, ...generatedRestaurants];
 
 export function photoUrl(seed: string): string {
   return `https://picsum.photos/seed/${seed}/800/600`;

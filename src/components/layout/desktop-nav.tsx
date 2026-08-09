@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Utensils } from "lucide-react";
 import { NAV_ITEMS } from "./nav-items";
 import { AuthButtons } from "./auth-buttons";
-import { PaletteSwitcher } from "./palette-switcher";
+import { ThemeWheelPicker } from "./theme-wheel-picker";
 import { cn } from "@/lib/utils";
 
 export function DesktopNav() {
@@ -41,7 +41,7 @@ export function DesktopNav() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <PaletteSwitcher />
+          <ThemeWheelPicker />
           <AuthButtons />
         </div>
       </div>
