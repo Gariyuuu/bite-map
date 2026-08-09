@@ -12,7 +12,7 @@ The core loop: **Discover → Visit → Check Off → Rate → Photograph → Jo
 
 ## Design principle: works with zero keys
 
-Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 44-restaurant hand-authored Orange County / LA dataset (Irvine, Costa Mesa, Newport Beach, Little Tokyo, Koreatown, Downtown LA, Little Saigon) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
+Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 52-restaurant hand-authored Orange County / LA dataset (Irvine, Costa Mesa, Newport Beach, Little Tokyo, Koreatown, Downtown LA, Little Saigon) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
 
 ## Architecture
 
@@ -85,14 +85,18 @@ The app is fully clickable at this point with mock data and a demo user.
 
 ### Add a database
 
+Fastest path, if the project is linked to Vercel (`vercel link`): `vercel install neon` provisions a free Neon Postgres, connects it to the project, and writes `DATABASE_URL` straight into `.env.local` — no separate signup. Otherwise:
+
 1. Create a [Neon](https://neon.tech) Postgres database, set `DATABASE_URL` in `.env.local`.
 2. `npm run db:push` — pushes the Drizzle schema.
-3. `npm run db:seed` — seeds the full 44-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
+3. `npm run db:seed` — seeds the full 52-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
 4. `npm run db:studio` — inspect data in Drizzle Studio.
 
 ### Add real accounts
 
-Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` from a [Clerk](https://clerk.com) app. Until then, every write (visits, wishlist, etc.) uses the seeded `demo_user_you` account — see `src/lib/auth.ts`.
+Fastest path: `vercel install clerk` (same one-command flow as Neon above) provisions a Clerk app and writes `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` into `.env.local` directly — it comes up in Clerk's dev/test mode, switch to production keys in the Clerk dashboard when ready to ship real accounts. Otherwise, create an app at [clerk.com](https://clerk.com) and set those two vars by hand. Until either is set, every write (visits, wishlist, etc.) uses the seeded `demo_user_you` account — see `src/lib/auth.ts`.
+
+This deployment already has both wired up via the Vercel Marketplace.
 
 ### Add live restaurant data
 
@@ -100,7 +104,7 @@ Any of `GOOGLE_PLACES_API_KEY`, `YELP_API_KEY`, `FOURSQUARE_API_KEY` switch the 
 
 ### YUU AI integration
 
-`src/services/yuu-ai.ts` posts the conversation plus a system prompt built from the user's preferences, recent visits, and wishlist to `${YUU_API_URL}/chat` with a Bearer token. Set `YUU_API_URL` and `YUU_API_KEY` (from your gariyuuu.com YUU deployment) to bring the AI Guide page online; until then it shows a "connect YUU" message instead of failing.
+`src/services/yuu-ai.ts` posts the conversation plus a system prompt built from the user's preferences, recent visits, and wishlist to `${YUU_API_URL}/v1/chat/completions` — the OpenAI-compatible wire format used by the self-hosted AI platform at `~/Projects/ai-platform` (api.gariyuuu.com). Set `YUU_API_URL` (base URL, no `/v1`) and `YUU_API_KEY` (a `gai_live_...` key — mint one with `docker compose exec api python -m admin create-key --name "bite-map"` from the ai-platform repo) to bring the AI Guide page online; until then it shows a "connect YUU" message instead of failing.
 
 ## Privacy
 

@@ -51,24 +51,40 @@ function buildSystemPrompt(context: YuuUserContext): string {
   return lines.join(" ");
 }
 
+interface OpenAIChatCompletion {
+  choices?: { message?: { content?: string } }[];
+}
+
 /**
- * Sends the conversation to the YUU API. Throws if YUU isn't configured —
- * callers (the /api/ai-guide/chat route) are responsible for the friendly
- * "connect YUU_API_URL / YUU_API_KEY" fallback shown in the UI.
+ * Sends the conversation to YUU_API_URL, which points at Gary's self-hosted
+ * AI platform (~/Projects/ai-platform, api.gariyuuu.com) — an OpenAI-compatible
+ * gateway. Wire format confirmed against the platform's own README and the
+ * live gariyuuu-web `/api/chat` route: POST `${baseURL}/v1/chat/completions`
+ * with `Authorization: Bearer gai_live_...` and a standard OpenAI chat body;
+ * responses follow the standard `choices[0].message.content` shape.
+ *
+ * Throws if YUU isn't configured — callers (the /api/ai-guide/chat route) are
+ * responsible for the friendly "connect YUU_API_URL / YUU_API_KEY" fallback
+ * shown in the UI.
  */
 export async function askYuu(messages: YuuMessage[], context: YuuUserContext): Promise<string> {
   if (!isYuuConfigured()) {
     throw new Error("YUU is not configured. Set YUU_API_URL and YUU_API_KEY.");
   }
 
-  const res = await fetch(`${process.env.YUU_API_URL}/chat`, {
+  const baseUrl = process.env.YUU_API_URL!.replace(/\/+$/, "");
+  const model = process.env.YUU_MODEL || "Yuu no Sekai";
+
+  const res = await fetch(`${baseUrl}/v1/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.YUU_API_KEY}`,
     },
     body: JSON.stringify({
+      model,
       messages: [{ role: "system", content: buildSystemPrompt(context) }, ...messages],
+      max_tokens: 500,
     }),
   });
 
@@ -76,6 +92,6 @@ export async function askYuu(messages: YuuMessage[], context: YuuUserContext): P
     throw new Error(`YUU API error (${res.status})`);
   }
 
-  const data = await res.json();
-  return data.reply ?? data.message ?? data.content ?? "";
+  const data = (await res.json()) as OpenAIChatCompletion;
+  return data.choices?.[0]?.message?.content ?? "";
 }
