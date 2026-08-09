@@ -4,6 +4,7 @@
  * Run with: npm run db:seed  (requires DATABASE_URL + `npm run db:push` first)
  */
 import { getDb } from "@/db";
+import { eq } from "drizzle-orm";
 import {
   restaurants,
   restaurantSources,
@@ -91,6 +92,9 @@ async function main() {
         .onConflictDoNothing();
     }
 
+    // Dishes have no unique constraint to onConflictDoNothing against, so make
+    // re-running the seed idempotent by clearing this restaurant's dishes first.
+    await db.delete(restaurantDishes).where(eq(restaurantDishes.restaurantId, restaurantId));
     for (const dish of seed.dishes) {
       await db.insert(restaurantDishes).values({
         id: id("dsh"),

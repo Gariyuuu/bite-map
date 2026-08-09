@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { RecommendationCard } from "./recommendation-card";
+import type { AiRecommendationCard } from "@/lib/queries/restaurant-lookup";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  card?: AiRecommendationCard | null;
 }
 
 const EXAMPLE_PROMPTS = [
@@ -47,10 +50,10 @@ export function YuuChat() {
       const res = await fetch("/api/ai-guide/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })) }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.reply, card: data.card ?? null }]);
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong reaching YUU." }]);
     } finally {
@@ -62,7 +65,7 @@ export function YuuChat() {
     <div className="flex h-[calc(100vh-9rem)] flex-col gap-3 md:h-[calc(100vh-8rem)]">
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border bg-card p-4">
         {messages.map((m, i) => (
-          <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+          <div key={i} className={cn("flex flex-col gap-2", m.role === "user" ? "items-end" : "items-start")}>
             <div
               className={cn(
                 "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm",
@@ -76,6 +79,7 @@ export function YuuChat() {
               )}
               {m.content}
             </div>
+            {m.card && <RecommendationCard card={m.card} />}
           </div>
         ))}
         {pending && <p className="text-xs text-muted-foreground">YUU is thinking...</p>}

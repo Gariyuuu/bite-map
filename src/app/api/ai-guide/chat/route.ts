@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { askYuu, isYuuConfigured, type YuuMessage } from "@/services/yuu-ai";
+import { buildAssistantResponse } from "@/lib/ai-recommendation";
 import { getCurrentUserId } from "@/lib/auth";
+import { getNearbyRestaurants } from "@/lib/queries/restaurants";
+import { DEFAULT_LOCATION } from "@/lib/neighborhoods";
 import { db, DATABASE_ENABLED, preferences, journalEntries, restaurants, visits, ratings, wishlists, sharedSpaceMembers } from "@/db";
 import { eq, desc } from "drizzle-orm";
 
@@ -9,6 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       reply:
         "YUU isn't connected yet — add YUU_API_URL and YUU_API_KEY to .env.local to enable live recommendations. Once connected, I'll use your visit history, ratings, and preferences to suggest where to eat next.",
+      card: null,
       configured: false,
     });
   }
@@ -17,6 +21,13 @@ export async function POST(req: NextRequest) {
   const userId = await getCurrentUserId();
 
   let context: Parameters<typeof askYuu>[1] = {};
+
+  const nearby = await getNearbyRestaurants({
+    latitude: DEFAULT_LOCATION.latitude,
+    longitude: DEFAULT_LOCATION.longitude,
+    radiusMiles: 30,
+    limit: 50,
+  });
 
   if (DATABASE_ENABLED) {
     const db_ = db!;
@@ -57,15 +68,19 @@ export async function POST(req: NextRequest) {
           overallRating: e.rating?.overall ?? null,
         })),
       wishlistRestaurantNames: wishlistNames,
+      availableRestaurants: nearby.map((r) => r.name),
     };
+  } else {
+    context = { availableRestaurants: nearby.map((r) => r.name) };
   }
 
   try {
-    const reply = await askYuu(messages, context);
-    return NextResponse.json({ reply, configured: true });
+    const rawReply = await askYuu(messages, context);
+    const { reply, card } = await buildAssistantResponse(rawReply);
+    return NextResponse.json({ reply, card, configured: true });
   } catch (err) {
     return NextResponse.json(
-      { reply: err instanceof Error ? err.message : "YUU couldn't respond right now.", configured: true },
+      { reply: err instanceof Error ? err.message : "YUU couldn't respond right now.", card: null, configured: true },
       { status: 502 }
     );
   }

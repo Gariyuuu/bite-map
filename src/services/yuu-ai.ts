@@ -16,6 +16,8 @@ export interface YuuUserContext {
   locationLabel?: string;
   recentVisits?: { restaurantName: string; cuisines: string[]; overallRating: number | null }[];
   wishlistRestaurantNames?: string[];
+  /** Restaurant names actually in Bite Map's data — the model may only "RECOMMENDATION:" one of these. */
+  availableRestaurants?: string[];
 }
 
 export function isYuuConfigured(): boolean {
@@ -28,6 +30,13 @@ function buildSystemPrompt(context: YuuUserContext): string {
     "Answer like a well-traveled local friend who knows the user's taste: concise, specific restaurant/dish recommendations, not generic advice.",
     "Prefer restaurants the user hasn't visited yet unless they ask to revisit somewhere. Always mention 1-2 specific dishes to order when recommending a restaurant.",
   ];
+
+  if (context.availableRestaurants?.length) {
+    lines.push(
+      `Restaurants you may recommend by name (only these — do not invent or use outside knowledge of other restaurants): ${context.availableRestaurants.join(", ")}.`,
+      "When your answer centers on ONE specific restaurant from that list, end your reply on its own new line with exactly: RECOMMENDATION: <restaurant name exactly as listed>. Omit this line if you're not recommending one specific place (e.g. general advice, a list of several options, or answering a question that isn't a recommendation)."
+    );
+  }
 
   if (context.favoriteCuisines?.length) lines.push(`Favorite cuisines: ${context.favoriteCuisines.join(", ")}.`);
   if (context.dislikedCuisines?.length) lines.push(`Avoid recommending: ${context.dislikedCuisines.join(", ")}.`);
