@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Slide } from "@/lib/year-in-food-slides";
+import { GRADIENT_CLASSES, type Slide } from "@/lib/year-in-food-slides";
+import { ExportVideoButton } from "./export-video-button";
 
 export function SlidePresentation({ slides }: { slides: Slide[] }) {
   const router = useRouter();
@@ -44,13 +45,16 @@ export function SlidePresentation({ slides }: { slides: Slide[] }) {
         ))}
       </div>
 
-      <button
-        onClick={() => router.push("/profile")}
-        className="absolute right-3 top-6 z-20 flex size-8 items-center justify-center rounded-full bg-white/10 text-white"
-        aria-label="Close"
-      >
-        <X className="size-4" />
-      </button>
+      <div className="absolute right-3 top-6 z-20 flex items-center gap-2">
+        <ExportVideoButton slides={slides} filename={`year-in-food-${new Date().getFullYear()}`} />
+        <button
+          onClick={() => router.push("/profile")}
+          className="flex size-8 items-center justify-center rounded-full bg-white/10 text-white"
+          aria-label="Close"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
 
       <div className="relative flex-1">
         <button className="absolute inset-y-0 left-0 z-10 w-1/3" aria-label="Previous slide" onClick={prev} />
@@ -66,7 +70,7 @@ export function SlidePresentation({ slides }: { slides: Slide[] }) {
             transition={{ duration: 0.25 }}
             className={cn(
               "absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br px-8 text-center",
-              slide.gradient
+              GRADIENT_CLASSES[slide.gradientIndex]
             )}
           >
             <span className="text-6xl">{slide.emoji}</span>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Eye, Pencil } from "lucide-react";
 import { BoardCanvas } from "./board-canvas";
 import { AddElementToolbar } from "./add-element-toolbar";
+import { ExportBoardButton } from "./export-board-button";
 import { updateJournalPage, deleteJournalPage } from "@/lib/actions/journal-pages";
 import type { BoardElement } from "@/types/photo-journal";
 
@@ -67,19 +68,22 @@ export function BoardEditor({
         ) : (
           <h1 className="font-serif text-2xl font-semibold">{title}</h1>
         )}
-        {ownedByCurrentUser && (
-          <div className="ml-auto flex items-center gap-1.5">
-            <Button variant="outline" size="icon" onClick={() => setEditing((e) => !e)} aria-label="Toggle edit mode">
-              {editing ? <Eye className="size-4" /> : <Pencil className="size-4" />}
-            </Button>
-            <Button variant="outline" size="icon" onClick={remove} disabled={pending} aria-label="Delete board">
-              <Trash2 className="size-4" />
-            </Button>
-            <Button onClick={save} disabled={pending}>
-              {pending ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <ExportBoardButton boardRef={boardRef} filename={title.toLowerCase().replace(/\s+/g, "-") || "board"} />
+          {ownedByCurrentUser && (
+            <>
+              <Button variant="outline" size="icon" onClick={() => setEditing((e) => !e)} aria-label="Toggle edit mode">
+                {editing ? <Eye className="size-4" /> : <Pencil className="size-4" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={remove} disabled={pending} aria-label="Delete board">
+                <Trash2 className="size-4" />
+              </Button>
+              <Button onClick={save} disabled={pending}>
+                {pending ? "Saving..." : "Save"}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <BoardCanvas boardRef={boardRef} elements={elements} editable={editing} onUpdate={updateElement} onDelete={removeElement} />

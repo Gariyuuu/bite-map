@@ -5,10 +5,11 @@ export interface Slide {
   eyebrow: string;
   value: string;
   subtitle?: string;
-  gradient: string;
+  gradientIndex: number;
 }
 
-const GRADIENTS = [
+/** Index-matched with GRADIENT_HEX below — Tailwind classes for the DOM presentation. */
+export const GRADIENT_CLASSES = [
   "from-rose-500 to-orange-400",
   "from-amber-500 to-yellow-400",
   "from-emerald-500 to-teal-400",
@@ -19,6 +20,18 @@ const GRADIENTS = [
   "from-teal-500 to-emerald-400",
 ];
 
+/** Same gradients as hex pairs, for the canvas-based video exporter (no CSS available there). */
+export const GRADIENT_HEX: [string, string][] = [
+  ["#f43f5e", "#fb923c"],
+  ["#f59e0b", "#facc15"],
+  ["#10b981", "#2dd4bf"],
+  ["#0ea5e9", "#22d3ee"],
+  ["#6366f1", "#a78bfa"],
+  ["#d946ef", "#f472b6"],
+  ["#f97316", "#fb7185"],
+  ["#14b8a6", "#34d399"],
+];
+
 export function buildSlides(stats: YearInFoodStats): Slide[] {
   const slides: Slide[] = [
     {
@@ -26,7 +39,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: `Your ${stats.year} Food Year`,
       value: "Let's look back",
       subtitle: "at everywhere you ate this year",
-      gradient: GRADIENTS[0],
+      gradientIndex: 0,
     },
   ];
 
@@ -36,7 +49,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Restaurants Visited",
       value: String(stats.restaurantsVisited),
       subtitle: stats.restaurantsVisited === 1 ? "restaurant" : "restaurants",
-      gradient: GRADIENTS[1],
+      gradientIndex: 1,
     });
   }
 
@@ -46,7 +59,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Cuisines Explored",
       value: String(stats.cuisinesTried),
       subtitle: "different cuisines",
-      gradient: GRADIENTS[2],
+      gradientIndex: 2,
     });
   }
 
@@ -56,7 +69,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Favorite Dish",
       value: stats.favoriteDish.name,
       subtitle: `${stats.favoriteDish.rating}/10 at ${stats.favoriteDish.restaurantName}`,
-      gradient: GRADIENTS[3],
+      gradientIndex: 3,
     });
   }
 
@@ -66,7 +79,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Most Visited Restaurant",
       value: stats.mostVisitedRestaurant.name,
       subtitle: `${stats.mostVisitedRestaurant.visits} visits`,
-      gradient: GRADIENTS[4],
+      gradientIndex: 4,
     });
   }
 
@@ -76,7 +89,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Highest Rated",
       value: stats.highestRatedRestaurant.name,
       subtitle: `${stats.highestRatedRestaurant.rating}/10`,
-      gradient: GRADIENTS[5],
+      gradientIndex: 5,
     });
   }
 
@@ -86,7 +99,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Most Visited Neighborhood",
       value: stats.mostVisitedNeighborhood.name,
       subtitle: `${stats.mostVisitedNeighborhood.visits} visits`,
-      gradient: GRADIENTS[6],
+      gradientIndex: 6,
     });
   }
 
@@ -96,7 +109,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Meals Together",
       value: String(stats.mealsTogether),
       subtitle: "shared with someone",
-      gradient: GRADIENTS[7],
+      gradientIndex: 7,
     });
   }
 
@@ -106,7 +119,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Most Expensive Meal",
       value: `$${stats.mostExpensiveMeal.cost.toFixed(0)}`,
       subtitle: stats.mostExpensiveMeal.restaurantName,
-      gradient: GRADIENTS[0],
+      gradientIndex: 0,
     });
   }
 
@@ -116,7 +129,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Best Value Meal",
       value: `$${stats.cheapestGreatMeal.cost.toFixed(0)}`,
       subtitle: `${stats.cheapestGreatMeal.rating}/10 at ${stats.cheapestGreatMeal.restaurantName}`,
-      gradient: GRADIENTS[1],
+      gradientIndex: 1,
     });
   }
 
@@ -126,7 +139,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
       eyebrow: "Average Rating",
       value: `${stats.averageRating}/10`,
       subtitle: "across every meal you logged",
-      gradient: GRADIENTS[2],
+      gradientIndex: 2,
     });
   }
 
@@ -134,7 +147,7 @@ export function buildSlides(stats: YearInFoodStats): Slide[] {
     emoji: "🥢",
     eyebrow: `That was your ${stats.year}`,
     value: "Here's to more great food",
-    gradient: GRADIENTS[3],
+    gradientIndex: 3,
   });
 
   return slides;
