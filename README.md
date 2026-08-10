@@ -12,7 +12,16 @@ The core loop: **Discover → Visit → Check Off → Rate → Photograph → Jo
 
 ## Design principle: works with zero keys
 
-Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: a 348-restaurant Orange County / LA dataset (52 hand-authored + ~260 procedurally generated across 20+ more neighborhoods — see src/db/seed/generated.ts) powers the map and discovery feed, and a demo user lets you click around every screen. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
+Every integration is optional and additive. With no environment variables set at all, Bite Map still runs fully: an Orange County / LA restaurant dataset powers the map and discovery feed, and a demo user lets you click around every screen. That dataset is a mix, and it's labeled honestly rather than pretending otherwise — see "Real vs. demo restaurant data" below. Add `DATABASE_URL` to persist visits, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` for real accounts, provider keys to replace mock data with live restaurant data, and `YUU_API_URL`/`YUU_API_KEY` to bring the AI concierge online — each upgrade is independent and requires no code changes. See `.env.example`.
+
+### Real vs. demo restaurant data
+
+Every restaurant has a `restaurants.is_fabricated` flag, surfaced as a "Demo listing" badge in the UI (cards, map popup, profile page) so it's never left ambiguous:
+
+- **Real** (`is_fabricated = false`): 52 hand-authored restaurants with real names/addresses (their ratings are still placeholder demo numbers), plus restaurants imported from **OpenStreetMap** via `src/db/seed/import-osm.ts` — actual places with no fabricated data at all (no invented ratings; a real place with no rating shows no rating, not a made-up one).
+- **Fabricated** (`is_fabricated = true`): procedurally-generated placeholder restaurants (`src/db/seed/generated.ts`) with made-up names, addresses, and ratings, used only to fill in density where no real data has been imported yet.
+
+To import real restaurants for a specific area: `npx tsx --env-file=.env.local src/db/seed/import-osm.ts` (edit the `QUERY_CENTERS` list to target new neighborhoods first). It's free and needs no API key, but runs against the public Overpass API, which is a best-effort shared community resource — it works reliably some of the time and is fully unavailable other times; the script retries across two mirrors with backoff and gives up gracefully per-neighborhood rather than failing the whole run. Google Places or Yelp would be more reliable and richer (real ratings, hours, photos) but require a paid-tier API key only the repo owner can create — see "Add live restaurant data" below.
 
 ## Architecture
 
@@ -89,7 +98,7 @@ Fastest path, if the project is linked to Vercel (`vercel link`): `vercel instal
 
 1. Create a [Neon](https://neon.tech) Postgres database, set `DATABASE_URL` in `.env.local`.
 2. `npm run db:push` — pushes the Drizzle schema.
-3. `npm run db:seed` — seeds the full 348-restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately.
+3. `npm run db:seed` — seeds the mock restaurant dataset plus a demo "you + partner" shared-space history (visits, ratings, journal entries, wishlist, collections), so every screen looks alive immediately. Optionally follow with `npx tsx --env-file=.env.local src/db/seed/import-osm.ts` to layer in real restaurants (see "Real vs. demo restaurant data" above).
 4. `npm run db:studio` — inspect data in Drizzle Studio.
 
 ### Add real accounts

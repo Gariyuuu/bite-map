@@ -4,7 +4,7 @@
  * Run with: npm run db:seed  (requires DATABASE_URL + `npm run db:push` first)
  */
 import { getDb } from "@/db";
-import { eq, notInArray } from "drizzle-orm";
+import { eq, and, notInArray, notLike } from "drizzle-orm";
 import {
   restaurants,
   restaurantSources,
@@ -117,8 +117,13 @@ async function main() {
   // few times during development — without this, restaurants from an older
   // version of the generator just accumulate as orphaned rows instead of
   // being replaced, since onConflictDoUpdate only touches ids that still
-  // exist in the current mockRestaurants array.
-  const removedStale = await db.delete(restaurants).where(notInArray(restaurants.id, restaurantIds)).returning({ id: restaurants.id });
+  // exist in the current mockRestaurants array. Excludes rst_osm_* ids,
+  // which come from import-osm.ts (real restaurants) and aren't part of the
+  // mock dataset at all — this cleanup must never touch them.
+  const removedStale = await db
+    .delete(restaurants)
+    .where(and(notInArray(restaurants.id, restaurantIds), notLike(restaurants.id, "rst_osm_%")))
+    .returning({ id: restaurants.id });
   if (removedStale.length > 0) {
     console.log(`Removed ${removedStale.length} stale restaurant(s) no longer in the mock dataset.`);
   }
