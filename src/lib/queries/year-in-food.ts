@@ -1,4 +1,4 @@
-import { db, DATABASE_ENABLED, visits, ratings, restaurants, visitDishes } from "@/db";
+import { db, DATABASE_ENABLED, visits, ratings, restaurants, visitDishes, safeQuery } from "@/db";
 import { eq, and, gte, lt, inArray } from "drizzle-orm";
 
 export interface YearInFoodStats {
@@ -32,6 +32,10 @@ const EMPTY: Omit<YearInFoodStats, "year"> = {
 
 export async function getYearInFoodStats(userId: string, year: number): Promise<YearInFoodStats> {
   if (!DATABASE_ENABLED) return { year, ...EMPTY };
+  return safeQuery(() => getYearInFoodStatsInner(userId, year), { year, ...EMPTY });
+}
+
+async function getYearInFoodStatsInner(userId: string, year: number): Promise<YearInFoodStats> {
   const db_ = db!;
 
   const yearStart = new Date(Date.UTC(year, 0, 1));

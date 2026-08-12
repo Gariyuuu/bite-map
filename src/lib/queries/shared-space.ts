@@ -1,4 +1,4 @@
-import { db, DATABASE_ENABLED, sharedSpaces, sharedSpaceMembers, users, restaurantUserStatus, wishlists, restaurants } from "@/db";
+import { db, DATABASE_ENABLED, sharedSpaces, sharedSpaceMembers, users, restaurantUserStatus, wishlists, restaurants, safeQuery } from "@/db";
 import { eq, inArray } from "drizzle-orm";
 
 export interface SharedSpaceMember {
@@ -29,6 +29,10 @@ export interface SharedSpaceData {
 
 export async function getUserSharedSpace(userId: string): Promise<SharedSpaceData | null> {
   if (!DATABASE_ENABLED) return null;
+  return safeQuery(() => getUserSharedSpaceInner(userId), null);
+}
+
+async function getUserSharedSpaceInner(userId: string): Promise<SharedSpaceData | null> {
   const db_ = db!;
 
   const [membership] = await db_.select().from(sharedSpaceMembers).where(eq(sharedSpaceMembers.userId, userId));
